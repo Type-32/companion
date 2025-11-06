@@ -11,11 +11,11 @@
 		"tauri": "cd src-tauri && tauri",
 		"tauri:dev": "cd src-tauri && bun tauri dev",
 		"tauri:build": "cd src-tauri && bun i && bun tauri build",
-		"tauri:build:debug": "cd src-tauri && bun tauri build --debug",
-		"lint": "eslint .",
-		"lint:fix": "eslint --fix ."
+		"tauri:build:debug": "cd src-tauri && bun tauri build --debug"
 	},
 	"dependencies": {
+		"@ai-sdk/openai": "^2.0.62",
+		"@ai-sdk/vue": "^2.0.87",
 		"@iconify-json/lucide": "^1.2.72",
 		"@iconify-json/simple-icons": "^1.2.57",
 		"@nuxt/fonts": "0.11.4",
@@ -23,14 +23,18 @@
 		"@nuxt/image": "1.11.0",
 		"@nuxt/ui": "^4.1.0",
 		"@nuxtjs/i18n": "10.2.0",
+		"@nuxtjs/mdc": "0.18.2",
+		"@openrouter/ai-sdk-provider": "^1.2.0",
+		"@tauri-apps/plugin-log": "^2.7.1",
 		"@vueuse/nuxt": "14.0.0",
+		"ai": "^5.0.87",
 		"nuxt": "^4.2.0",
 		"nuxt-auth-utils": "0.5.25",
-		"vue": "^3.5.22"
+		"vue": "^3.5.22",
+		"zod": "^4.1.12"
 	},
 	"devDependencies": {
 		"@tauri-apps/cli": "^2.9.3",
-		"eslint": "^9.39.1",
 		"typescript": "^5.9.3"
 	}
 }
