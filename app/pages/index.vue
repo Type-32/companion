@@ -5,7 +5,7 @@ import { useClipboard } from '@vueuse/core'
 import {getTextFromMessage} from "@nuxt/ui/utils/ai";
 
 const modelId = ref('deepseek/deepseek-v3.2-exp')
-const apiKey = ref('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')
+const apiKey = ref('')
 
 
 const toast = useToast()
