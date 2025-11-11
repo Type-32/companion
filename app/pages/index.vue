@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {Chat} from "@ai-sdk/vue";
 import {DefaultChatTransport, type UIMessage} from "ai";
-import { useClipboard } from '@vueuse/core'
+import {useClipboard} from '@vueuse/core'
 import {getTextFromMessage} from "@nuxt/ui/utils/ai";
 
 const modelId = ref('deepseek/deepseek-v3.2-exp')
@@ -16,7 +16,7 @@ const chat = new Chat({
         api: '/api/v1/generate'
     }),
     onError(error) {
-        const { message } = typeof error.message === 'string' && error.message[0] === '{' ? JSON.parse(error.message) : error
+        const {message} = typeof error.message === 'string' && error.message[0] === '{' ? JSON.parse(error.message) : error
         toast.add({
             description: message,
             icon: 'i-lucide-alert-circle',
@@ -37,7 +37,7 @@ function handleSubmit(e: Event) {
         }, {
             body: {
                 model: unref(modelId),
-                apiKey: unref(apiKey)
+                // apiKey: unref(apiKey)
             }
         })
         input.value = ''
@@ -53,6 +53,23 @@ function copy(e: MouseEvent, message: UIMessage) {
         copied.value = false
     }, 2000)
 }
+
+async function testEncrypt() {
+    const encryptedKey = await $fetch('/api/v1/auth/encrypt', {
+        method: 'post',
+        body: {
+            apiKey: modelId.value
+        }
+    })
+    console.log(encryptedKey)
+    const decryptedKey = await $fetch('/api/v1/auth/decrypt', {
+        method: 'post',
+        body: {
+            encryptedKey: encryptedKey
+        }
+    })
+    console.log(decryptedKey)
+}
 </script>
 
 <template>
@@ -62,7 +79,11 @@ function copy(e: MouseEvent, message: UIMessage) {
                 should-auto-scroll
                 :messages="chat.messages"
                 :status="chat.status"
-                :assistant="chat.status !== 'streaming' ? { actions: [{ label: 'Copy', icon: copied ? 'i-lucide-copy-check' : 'i-lucide-copy', onClick: copy }] } : { actions: [] }"
+                :assistant="chat.status !== 'streaming' ? {
+                    actions: [
+                        { label: 'Copy', icon: copied ? 'i-lucide-copy-check' : 'i-lucide-copy', onClick: copy }
+                    ]
+                } : { actions: [] }"
                 :spacing-offset="160"
                 class="lg:pt-(--ui-header-height) pb-4 sm:pb-6"
             >
@@ -71,16 +92,18 @@ function copy(e: MouseEvent, message: UIMessage) {
                         <template v-for="(part, index) in message.parts" :key="index">
                             <Reasoning
                                 v-if="part.type == 'reasoning'"
-                                :text="part.text"
+                                :text="() => part.text"
                                 :is-streaming="part.state !== 'done'"
                             />
                             <MDC
                                 v-else-if="part.type == 'text'"
-                                :value="part.text"
+                                :value="() => part.text"
                                 :cache-key="`${message.id}`"
                                 :parser-options="{ highlight: false }"
                                 class="*:first:mt-0 *:last:mb-0"
                             />
+<!--                            <div class="*:first:mt-0 *:last:mb-0" v-else-if="part.type == 'text'">{{part.text}}</div>-->
+<!--                            <div class="text-sm font-mono">JSON: {{message}}</div>-->
                         </template>
                     </div>
                 </template>
@@ -102,9 +125,9 @@ function copy(e: MouseEvent, message: UIMessage) {
                     />
                     <UInput placeholder="Model ID" v-model="modelId"/>
                     <UInput placeholder="API Key" type="password" v-model="apiKey"/>
+                    <UButton label="Test Encrypt" @click="testEncrypt"/>
                 </template>
             </UChatPrompt>
-            <div>{{chat.messages}}</div>
         </UContainer>
     </UMain>
 </template>

@@ -1,12 +1,15 @@
 import {GeneratePayload} from "#shared/types/requests";
 import {createOpenRouter} from "@openrouter/ai-sdk-provider";
-import {convertToModelMessages, streamText} from "ai";
+import {convertToModelMessages, streamText, UIMessage} from "ai";
+import { z } from "zod";
+import {useEncryption} from "~~/server/utils/utility/useEncryption";
 
 export default defineEventHandler(async (event) => {
-    const payload = await readBody<GeneratePayload>(event);
-    console.log(await readBody(event))
+    const rc = useRuntimeConfig()
+    const $crypt = useEncryption()
+    const payload = await readValidatedBody<GeneratePayload>(event, z.custom<GeneratePayload>().parse);
 
-    if (!payload.apiKey)
+    if (!payload.apiKey && !rc.testingApiKey)
         throw createError({
             statusCode: 400,
             statusMessage: "Bad payload",
@@ -20,7 +23,7 @@ export default defineEventHandler(async (event) => {
         })
 
     const openrouter = createOpenRouter({
-        apiKey: payload.apiKey
+        apiKey: await $crypt.decryptEndpoint(payload.apiKey ?? rc.testingApiKey)
     })
 
     const result = streamText({

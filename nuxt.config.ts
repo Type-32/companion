@@ -23,5 +23,20 @@ export default defineNuxtConfig({
             // Tauri requires a consistent port
             strictPort: true,
         },
+        optimizeDeps: {
+            include: [
+                "@tauri-apps/plugin-sql",
+                "@type32/tauri-sqlite-orm",
+                "@ai-sdk/vue",
+                "ai",
+                "@nuxt/ui/utils/ai",
+                "@vue/devtools-core",
+                "@vue/devtools-kit"
+            ]
+        }
     },
+    runtimeConfig: {
+        testingApiKey: '',
+        sessionPassword: ''
+    }
 });
