@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 
-export function useEncryption() {
+export function useServerEncryption() {
     function encrypt(text: string, key: string): string {
         const algorithm = 'aes-256-cbc'
         const iv = randomBytes(16)

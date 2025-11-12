@@ -48,6 +48,14 @@ export const files = sqliteTable('files', {
     updatedAt: integer('updatedAt', { mode: "timestamp" }).$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
 })
 
+export const models = sqliteTable('models', {
+    id: text('id').unique().primaryKey().default(crypto.randomUUID()).$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    inferenceId: text('inferenceId').notNull(),
+    createdAt: integer('createdAt', { mode: "timestamp" }).$defaultFn(() => new Date()),
+    updatedAt: integer('updatedAt', { mode: "timestamp" }).$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
+})
+
 // relations
 
 export const charactersRelations = relations(characters, ({manyToMany}) => ({

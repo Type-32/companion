@@ -1,9 +1,9 @@
 import {z} from "zod";
-import {useEncryption} from "~~/server/utils/utility/useEncryption";
+import {useServerEncryption} from "~~/server/utils/utility/useServerEncryption";
 
 export default defineEventHandler(async (event) => {
     const rc = useRuntimeConfig()
-    const $crypt = useEncryption()
+    const $crypt = useServerEncryption()
     const { apiKey } = await readValidatedBody(event, z.object({
         apiKey: z.string()
     }).parse)
