@@ -1,12 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    devtools: {enabled: true},
+    devtools: {enabled: false},
 
     modules: ["@nuxt/ui", "nuxt-auth-utils", "@vueuse/nuxt", "@nuxt/image", "@nuxt/icon", "@nuxt/fonts", "@nuxtjs/i18n", "@nuxtjs/mdc"],
 
     css: ["~/assets/css/main.css"],
 
-    compatibilityDate: "2024-11-27",
+    compatibilityDate: "2025-11-01",
 
     // Enable SSG
     ssr: false,
@@ -31,7 +31,17 @@ export default defineNuxtConfig({
                 "ai",
                 "@nuxt/ui/utils/ai",
                 "@vue/devtools-core",
-                "@vue/devtools-kit"
+                "@vue/devtools-kit",
+                "@tauri-apps/plugin-store",
+                "@tauri-apps/plugin-fs",
+                "@tauri-apps/plugin-dialog",
+                "@tauri-apps/plugin-opener",
+                "@tauri-apps/plugin-notification",
+                "@tauri-apps/plugin-os",
+                "@tauri-apps/plugin-clipboard-manager",
+                "@openrouter/ai-sdk-provider",
+                "zod",
+                "reka-ui"
             ]
         }
     },

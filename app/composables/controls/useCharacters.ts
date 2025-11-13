@@ -32,7 +32,7 @@ export function useCharacters() {
             .returningFirst()
     }
 
-    async function editCharacter(character: InsertCharacter): Promise<Character | undefined> {
+    async function editCharacter(character: Partial<InsertCharacter>): Promise<Character | undefined> {
         if (!character.id) {
             $qt.error('Unable to edit Character', 'The given character payload\'s ID cannot be undefined or null.')
             return
@@ -44,11 +44,24 @@ export function useCharacters() {
             .returningFirst()
     }
 
+    async function getCharacterDataAsCard(charId: string) {
+        const char = await getCharacter(charId)
+        if (!char || !char.data) return "";
+        let str = "[\n"
+        str += `characterId(${char?.id});\n`
+        for (const key of Object.keys(char.data.baseProfile)) {
+            str += `${key}(${char.data.baseProfile[key]});\n`
+        }
+        str += "]"
+        return str
+    }
+
     return {
         getCharacters,
         getCharacter,
         addCharacter,
         deleteCharacter,
-        editCharacter
+        editCharacter,
+        getCharacterDataAsCard
     }
 }

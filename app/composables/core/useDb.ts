@@ -7,11 +7,15 @@ let orm: TauriORM
 
 export function useDb() {
     async function load() {
-        if (!dbInstance)
-            dbInstance = await Database.load("sqlite:main.db");
-        orm = new TauriORM(dbInstance, schema)
+        try {
+            if (!dbInstance)
+                dbInstance = await Database.load("sqlite:main.db");
+            orm = new TauriORM(dbInstance, schema)
 
-        await orm.migrateIfDirty()
+            await orm.migrateIfDirty()
+        } catch (e: any) {
+            console.error(e)
+        }
     }
 
     return {

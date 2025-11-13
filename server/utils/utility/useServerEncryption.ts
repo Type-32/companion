@@ -1,24 +1,38 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
+import { cbc } from '@noble/ciphers/aes.js'
+import { bytesToHex, hexToBytes, randomBytes } from '@noble/ciphers/utils.js'
 
 export function useServerEncryption() {
+    function getKeyBytes(key: string): Uint8Array {
+        const paddedKey = key.padEnd(32).slice(0, 32)
+        return new TextEncoder().encode(paddedKey)
+    }
+
     function encrypt(text: string, key: string): string {
-        const algorithm = 'aes-256-cbc'
         const iv = randomBytes(16)
-        const cipher = createCipheriv(algorithm, Buffer.from(key.padEnd(32).slice(0, 32)), iv)
-        let encrypted = cipher.update(text)
-        encrypted = Buffer.concat([encrypted, cipher.final()])
-        return `${iv.toString('hex')}:${encrypted.toString('hex')}`
+        const keyBytes = getKeyBytes(key)
+        const cipher = cbc(keyBytes, iv)
+
+        const textBytes = new TextEncoder().encode(text)
+        const encrypted = cipher.encrypt(textBytes)
+
+        return `${bytesToHex(iv)}:${bytesToHex(encrypted)}`
     }
 
     function decrypt(text: string, key: string): string {
-        const algorithm = 'aes-256-cbc'
-        const [ivHex, encryptedHex] = text.split(':')
-        const iv = Buffer.from(ivHex, 'hex')
-        const encrypted = Buffer.from(encryptedHex, 'hex')
-        const decipher = createDecipheriv(algorithm, Buffer.from(key.padEnd(32).slice(0, 32)), iv)
-        let decrypted = decipher.update(encrypted)
-        decrypted = Buffer.concat([decrypted, decipher.final()])
-        return decrypted.toString()
+        const parts = text.split(':')
+        if (parts.length !== 2) {
+            throw new Error('Invalid ciphertext format')
+        }
+
+        const [ivHex, encryptedHex] = parts
+        const iv = hexToBytes(ivHex)
+        const encrypted = hexToBytes(encryptedHex)
+        const keyBytes = getKeyBytes(key)
+
+        const decipher = cbc(keyBytes, iv)
+        const decrypted = decipher.decrypt(encrypted)
+
+        return new TextDecoder().decode(decrypted)
     }
 
     async function encryptEndpoint(text: string): Promise<string> {

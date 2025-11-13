@@ -17,15 +17,13 @@ export function useProfile() {
         $profileState.value = await $store.get<UserProfile>($keyword["profile.data"])
         $configState.value = await $store.get<UserConfig>($keyword["profile.config"])
 
-        if (!unref($profileState)) {
+        if (!unref($profileState))
             $profileState.value = defaultUserProfile()
-            await save()
-        }
 
-        if (!unref($configState)) {
+        if (!unref($configState))
             $configState.value = defaultUserConfig()
-            await save()
-        }
+
+        await save()
     }
 
     async function save() {

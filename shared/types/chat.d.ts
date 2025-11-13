@@ -1,6 +1,6 @@
 import type {UIMessage} from "ai";
 import type {InferInsertModel, InferSelectModel} from "@type32/tauri-sqlite-orm";
-import {type characters, conversations, messages, models} from "#shared/database/schema";
+import {type characters, charactersConversations, conversations, messages, models} from "#shared/database/schema";
 
 export interface ChatData {
     messages: UIMessage[], // for the user-character messages
@@ -11,6 +11,7 @@ export type Character = InferSelectModel<typeof characters>
 export type Conversation = InferSelectModel<typeof conversations>
 export type Message = InferSelectModel<typeof messages>
 export type Model = InferSelectModel<typeof models>
+export type CharConvRelation = InferSelectModel<typeof charactersConversations>
 
 export type InsertCharacter = InferInsertModel<typeof characters>
 export type InsertConversation = InferInsertModel<typeof conversations>

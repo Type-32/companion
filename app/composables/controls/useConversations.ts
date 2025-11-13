@@ -1,8 +1,7 @@
 import {useDb} from "~/composables/core/useDb";
 import {characters, charactersConversations, conversations} from "#shared/database/schema";
 import {and, eq, type InferInsertModel} from "@type32/tauri-sqlite-orm";
-
-type ConvInsert = InferInsertModel<typeof conversations>
+import type {CharConvRelation} from "#shared/types/chat";
 
 export function useConversations() {
     const $db = useDb()
@@ -22,7 +21,7 @@ export function useConversations() {
             .get()
     }
 
-    async function createConversation(data: ConvInsert) {
+    async function createConversation(data: InsertConversation) {
         if (!data.name) return;
 
         return await $db.orm.insert(conversations)
@@ -30,7 +29,7 @@ export function useConversations() {
             .returningAll()
     }
 
-    async function editConversation(id: string, data: ConvInsert) {
+    async function editConversation(id: string, data: Partial<InsertConversation>) {
         return await $db.orm.update(conversations)
             .set(data)
             .where(eq(conversations._.columns.id, id))
@@ -66,12 +65,58 @@ export function useConversations() {
         return ids
     }
 
+    async function addCharactersToConv(convId: string, charIds: string[]) {
+        return await $db.orm.transaction(async (tx) => {
+            const addedCharacters: CharConvRelation[] = []
+            for (const id of charIds) {
+                if (!(await tx.select(charactersConversations).where(and(eq(charactersConversations._.columns.conversationId, convId), eq(charactersConversations._.columns.characterId, id))).exists())) {
+                    const ch = await tx.insert(charactersConversations)
+                        .values({
+                            conversationId: convId,
+                            characterId: id
+                        })
+                        .returningFirst()
+
+                    if (ch)
+                        addedCharacters.push(ch)
+                }
+            }
+
+            return addedCharacters
+        })
+    }
+
+    async function removeCharactersFromConv(convId: string, charIds: string[]) {
+        return await $db.orm.transaction(async (tx) => {
+            const removedCharacters: CharConvRelation[] = []
+            for (const id of charIds) {
+                if (await tx.select(charactersConversations).where(and(eq(charactersConversations._.columns.conversationId, convId), eq(charactersConversations._.columns.characterId, id))).exists()) {
+                    const ch = await tx.delete(charactersConversations)
+                        .where(
+                            and(
+                                eq(charactersConversations._.columns.conversationId, convId),
+                                eq(charactersConversations._.columns.characterId, id)
+                            )
+                        )
+                        .returningFirst()
+
+                    if (ch)
+                        removedCharacters.push(ch)
+                }
+            }
+
+            return removedCharacters
+        })
+    }
+
     return {
         getAllConversations,
         getConversation,
         createConversation,
         editConversation,
         addCharacterToConversation,
-        getCharactersInConv
+        getCharactersInConv,
+        addCharactersToConv,
+        removeCharactersFromConv
     }
 }

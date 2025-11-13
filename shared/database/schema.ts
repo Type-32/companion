@@ -1,10 +1,13 @@
 import {integer, sqliteTable, text, relations, boolean} from "@type32/tauri-sqlite-orm";
 import type {UIMessage} from "ai";
+import type {CharacterData} from "#shared/types/roleplay"
 
 export const characters = sqliteTable('characters', {
     id: text('id').unique().primaryKey().default(crypto.randomUUID()).$defaultFn(() => crypto.randomUUID()),
     name: text('name').notNull(),
     data: text('data', { mode: "json" }).$type<CharacterData>(),
+    embeddingsPath: text('embeddingsPath').unique(),
+    publicAvatarUrl: text('publicAvatarUrl').notNull(),
     createdAt: integer('createdAt', { mode: "timestamp" }).$defaultFn(() => new Date()),
     updatedAt: integer('updatedAt', { mode: "timestamp" }).$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
 })
@@ -26,6 +29,7 @@ export const messages = sqliteTable('messages', {
     text: text('text').notNull(),
     conversationId: text('conversationId'),
     senderId: text('senderId'),
+    quotingMessageId: integer('quotingMessageId'),
     createdAt: integer('createdAt', { mode: "timestamp" }).$defaultFn(() => new Date()),
     updatedAt: integer('updatedAt', { mode: "timestamp" }).$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
 })
@@ -52,6 +56,7 @@ export const models = sqliteTable('models', {
     id: text('id').unique().primaryKey().default(crypto.randomUUID()).$defaultFn(() => crypto.randomUUID()),
     name: text('name').notNull(),
     inferenceId: text('inferenceId').notNull(),
+    forEmbedding: boolean('forEmbedding').default(false).$defaultFn(() => false),
     createdAt: integer('createdAt', { mode: "timestamp" }).$defaultFn(() => new Date()),
     updatedAt: integer('updatedAt', { mode: "timestamp" }).$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
 })
@@ -86,7 +91,11 @@ export const messagesRelations = relations(messages, ({one, many}) => ({
         fields: [messages._.columns.senderId],
         references: [characters._.columns.id]
     }),
-    attachments: many(files)
+    attachments: many(files),
+    quotingMessage: one(messages, {
+        fields: [messages._.columns.quotingMessageId],
+        references: [messages._.columns.id]
+    })
 }))
 
 export const aiMessagesRelations = relations(aiMessages, ({one}) => ({

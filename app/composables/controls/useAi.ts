@@ -24,15 +24,11 @@ export function useAi() {
     })
 
     async function load() {
-        apiKey.value = await $cry.decryptEndpoint(unref($user.$configState)?.apiKey ?? $rc.testingApiKey)
+        apiKey.value = await $cry.decryptEndpoint(unref($user.$configState)?.apiKey ?? "") ?? $rc.testingApiKey
     }
 
     async function getUserSelectedModel() {
-        const userModels: Model[] = await $db.orm.select(models)
-            .orderBy(models._.columns.updatedAt, 'DESC')
-            .all()
-
-        return userModels.find((value) => value.id == unref($user.$configState)?.selectedModel)
+        return await getModel(unref($user.$configState)?.selectedCompletionModel ?? '')
     }
 
     async function generateResponse(convId: string, messages: UIMessage[]) {
@@ -43,14 +39,29 @@ export function useAi() {
                 console.error(error)
             },
             tools: {
+                getMessagesInConv: tool({
+                    description: 'Gets the recent sent messages and their sender in your current chat conversation.',
+                    inputSchema: z.object({
+                        paginate: z.boolean().default(false).describe('Whether your response is paginated or not. If this is set to true, then you need to fill in the other two parameters, `cursor` and `messagesPerPage`. By default, this is set to false, which gets you all the messages in the conversation.'),
+                        cursor: z.number().optional().describe('The cursor of the paginated result.'),
+                        messagesPerPage: z.number().optional().default(50).describe('The amount of messages per page for paginated response.')
+                    }),
+                    execute: async ({ paginate, cursor, messagesPerPage }) => {
+                        if (paginate)
+                            return await $msg.getAllMessages(convId, cursor, messagesPerPage)
+                        else
+                            return await $msg.getAllMessages(convId)
+                    }
+                }),
                 sendMessage: tool({
                     description: 'Send a message to user.',
                     inputSchema: z.object({
                         textMessage: z.string().describe('The text content to send in the message.'),
                         senderId: z.string().describe('Who to send the message as.'),
+                        quoteMessageId: z.number().optional().describe('You can choose to quote an already sent message in the conversation in your message. This can be used to reply to specific messages in a group chat. This parameter is optional.')
                     }),
-                    execute: async ({ textMessage, senderId }) => {
-                        await $msg.addMessage(convId, textMessage, senderId)
+                    execute: async ({ textMessage, senderId, quoteMessageId }) => {
+                        return await $msg.addMessage(convId, textMessage, senderId, quoteMessageId)
                     }
                 }),
                 revokeMessage: tool({
@@ -127,6 +138,62 @@ export function useAi() {
             .returningFirst()
     }
 
+    /**
+     * Add a model.
+     * @param modelName The name of the model. Can be any name, a user-given nickname.
+     * @param inferenceId The inference ID of the model on OpenRouter. e.g. `deepseek/deepseek-v3.2-exp`
+     * @param embeddingModel Whether the added model is for generating embeddings or not.
+     */
+    async function addModel(modelName: string, inferenceId: string, embeddingModel: boolean) {
+        return await $db.orm.insert(models)
+            .values({
+                name: modelName,
+                inferenceId: inferenceId,
+                forEmbedding: embeddingModel
+            })
+            .returningFirst()
+    }
+
+    /**
+     * Remove a model from the list.
+     * @param modelId NOT the Inference ID. The UUID column value of the models table.
+     */
+    async function removeModel(modelId: string) {
+        return await $db.orm.delete(models)
+            .where(eq(models._.columns.id, modelId))
+            .returningFirst()
+    }
+
+    async function editModel(modelId: string, model: Partial<InsertModel>) {
+        return await $db.orm.update(models)
+            .set(model)
+            .where(eq(models._.columns.id, modelId))
+            .returningFirst()
+    }
+
+    async function getModels() {
+        return await $db.orm.select(models)
+            .orderBy(models._.columns.createdAt, "DESC")
+            .all()
+    }
+
+    async function getModel(modelId: string) {
+        return await $db.orm.select(models)
+            .where(eq(models._.columns.id, modelId))
+            .first()
+    }
+
+    async function listOpenRouterModels(embeddingModels: boolean = false): Promise<any[]> {
+        const list: any = await $fetch('/api/v1/openrouter/models', {
+            method: 'post',
+            body: {
+                apiKey: unref($user.$configState)?.apiKey,
+                embeddingModels: embeddingModels
+            }
+        })
+        return list?.data as any[]
+    }
+
     return {
         load,
         getUserSelectedModel,
@@ -134,6 +201,12 @@ export function useAi() {
         getAiMessages,
         addAiMessage,
         removeAiMessage,
-        getUiMessages
+        getUiMessages,
+        addModel,
+        removeModel,
+        editModel,
+        getModel,
+        getModels,
+        listOpenRouterModels
     }
 }

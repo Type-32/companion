@@ -10,3 +10,10 @@ const appConfig = useAppConfig()
         </NuxtLayout>
     </UApp>
 </template>
+
+<style>
+@reference "~/assets/css/main.css";
+[data-tauri-decorum-tb] {
+    @apply !h-4;
+}
+</style>

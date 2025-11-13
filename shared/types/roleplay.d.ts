@@ -1,5 +1,4 @@
 export interface CharacterData {
-    id: string,
     baseProfile: Record<string, string>,
 }
 
@@ -12,6 +11,7 @@ export interface UserProfile {
 
 export interface UserConfig {
     apiKey: string, // The encrypted key
-    selectedModel: string, // The UUID of the added models
+    selectedCompletionModel: string, // The UUID of the added models
+    selectedEmbeddingModel: string, // The UUID of the added embedding models
     msgRevokeAllowanceDuration: number, // In Seconds
 }

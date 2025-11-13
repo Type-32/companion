@@ -12,7 +12,8 @@ export function defaultUserProfile(data?: Partial<UserProfile>): UserProfile {
 export function defaultUserConfig(data?: Partial<UserConfig>): UserConfig {
     return {
         apiKey: data?.apiKey ?? "",
-        selectedModel: data?.selectedModel ?? "moonshotai/kimi-k2-thinking",
+        selectedCompletionModel: data?.selectedCompletionModel ?? "moonshotai/kimi-k2-thinking",
+        selectedEmbeddingModel: data?.selectedEmbeddingModel ?? "qwen/qwen3-embedding-8b",
         msgRevokeAllowanceDuration: data?.msgRevokeAllowanceDuration ?? 120
     } satisfies UserConfig
 }
